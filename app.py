@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from db import Session
 from models import GeoZone
 
@@ -10,7 +10,7 @@ def zones():
     try:
         zones = Session.query(GeoZone).all()
         
-        return str(zones[0].zone_name)
+        return render_template('zones.html', zones=zones)
     finally:
         Session.remove()
 
