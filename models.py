@@ -103,6 +103,7 @@ class Orders(Base):
     validated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
     assigned_to: Mapped[Optional[int]] = mapped_column(Integer)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+    eta: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime)
 
     users: Mapped[Optional['Users']] = relationship('Users', foreign_keys=[assigned_to], back_populates='orders_assigned_to')
     geo_zone: Mapped[Optional['GeoZone']] = relationship('GeoZone', back_populates='orders')

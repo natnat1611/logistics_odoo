@@ -131,3 +131,4 @@ ALTER TABLE logistics.shipments ADD CONSTRAINT fk_shipments_geo_zone FOREIGN KEY
 
 ALTER TABLE logistics.shipments ADD CONSTRAINT fk_shipments_creator FOREIGN KEY ( created_by ) REFERENCES logistics.users( id_user );
 
+ALTER TABLE logistics.orders ADD COLUMN eta TIMESTAMP;
