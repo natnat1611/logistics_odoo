@@ -12,11 +12,6 @@ def group_orders(session):
     for order in orders:
         print (order)
 
-def group_by_eta(orders_by_zone, window_hours):
-    #→ pour chaque zone, trie les commandes par ETA
-    #→ regroupe celles dont l'écart ETA est <= window_hours
-    #→ retourne un dict {geo_zone_id: [[groupe1], [groupe2]]}
-    pass
 
 def apply_grouping(session, groups):
     #→ pour chaque groupe formé
