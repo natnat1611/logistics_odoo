@@ -158,3 +158,20 @@ INSERT INTO logistics.shipment_pallet (shipment_id, pallet_id, load_order) VALUE
 (3, 3, 1),  -- shipment expédié : palette 3
 (4, 6, 1),  -- shipment Gand : palette 6
 (4, 7, 2);  -- shipment Gand : palette 7
+
+
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '1 day'  WHERE order_number = 1;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '1 day'  WHERE order_number = 2;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '2 days' WHERE order_number = 3;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '1 day'  WHERE order_number = 4;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '3 days' WHERE order_number = 5;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '2 days' WHERE order_number = 6;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '4 days' WHERE order_number = 7;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '5 days' WHERE order_number = 8;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '5 days' WHERE order_number = 9;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '1 day'  WHERE order_number = 10;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '2 days' WHERE order_number = 11;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '3 days' WHERE order_number = 12;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '6 days' WHERE order_number = 13;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '7 days' WHERE order_number = 14;
+UPDATE logistics.orders SET eta = NOW() + INTERVAL '7 days' WHERE order_number = 15;
