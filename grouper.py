@@ -1,19 +1,16 @@
 from db import Session
 from models import GeoZone, Orders, OrderLines,Pallets,PalletLines,Shipments,ShipmentPallet
-from sqlalchemy import select
+
 
 
 def get_pending_orders(session):
     pending = session.query(Orders).filter(Orders.status.in_(['validated', 'ready'])).all()
     return pending
 
-def group_orders(orders):
-    groups = dict()
+def group_orders(session):
+    orders = session.query(Orders).filter(Orders.status.in_(['validated', 'ready'])).order_by(Orders.geo_zone_id, Orders.status, Orders.eta).all()
     for order in orders:
-        if order.status == "ready": 
-            if zone_id not in groups:
-                groups[zone_id] = []        
-            groups[zone_id].append(order) 
+        print (order)
 
 def group_by_eta(orders_by_zone, window_hours):
     #→ pour chaque zone, trie les commandes par ETA
@@ -32,3 +29,7 @@ def run_grouping(session, window_hours=48):
     #→ appelle les 3 fonctions dans l'ordre
     #→ retourne les groupes pour affichage
     pass
+
+
+if __name__ == '__main__':
+    group_orders(Session)
