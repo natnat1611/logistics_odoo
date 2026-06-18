@@ -1,5 +1,5 @@
 from db import Session
-from models import GeoZone, Orders, OrderLines,Pallets,PalletLines,Shipments,ShipmentPallet
+from models import GeoZone, Orders, OrderLines,Pallets,PalletLines,Shipments,ShipmentPallet, Groups
 from datetime import datetime
 
 
@@ -43,20 +43,26 @@ def group_orders(session, window_hours=48):
 
 
 def apply_grouping(session, groups):
-    #→ pour chaque groupe formé
-    #→ passe les commandes au statut 'grouped'
-    #→ commit
-    pass
+
+    for group in groups:
+        new_group =  Groups(
+        geo_zone_id = group['geo_zone_id'],
+        eta_ref     = group['eta_ref'],
+        status      = 'open'
+)
+        session.add(new_group)
+        session.flush()
+        for order in group['orders']:
+            order.group_id = new_group.id_group  
+
+    session.commit()              
+    
 
 def run_grouping(session, window_hours=48):
-    #→ fonction principale appelée par Flask
-    #→ appelle les 3 fonctions dans l'ordre
-    #→ retourne les groupes pour affichage
-    pass
+    groups = group_orders(session)
+    apply_grouping(session, groups)
+
 
 
 if __name__ == '__main__':
-    groups =  group_orders(Session)
-
-    for group in groups:
-        print(f"Zone {group['geo_zone_id']} - ETA ref {group['eta_ref']} - {len(group['orders'])} orders")
+    run_grouping(Session)

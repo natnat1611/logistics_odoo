@@ -25,7 +25,7 @@ class GeoZone(Base):
     orders: Mapped[list['Orders']] = relationship('Orders', back_populates='geo_zone')
     pallets: Mapped[list['Pallets']] = relationship('Pallets', back_populates='geo_zone')
     shipments: Mapped[list['Shipments']] = relationship('Shipments', back_populates='geo_zone')
-
+    groups: Mapped[list['Groups']] = relationship('Groups', back_populates='geo_zone')
 
 class Products(Base):
     __tablename__ = 'products'
@@ -88,6 +88,7 @@ class Orders(Base):
         ForeignKeyConstraint(['assigned_to'], ['logistics.users.id_user'], name='fk_assigned'),
         ForeignKeyConstraint(['geo_zone_id'], ['logistics.geo_zone.id_geo_zone'], name='fk_geo_zone'),
         ForeignKeyConstraint(['validated_by'], ['logistics.users.id_user'], name='fk_validated'),
+        ForeignKeyConstraint(['group_id'], ['logistics.groups.id_group'], name='fk_orders_group'),
         PrimaryKeyConstraint('order_number', name='pk_orders'),
         {'schema': 'logistics'}
     )
@@ -109,6 +110,9 @@ class Orders(Base):
     geo_zone: Mapped[Optional['GeoZone']] = relationship('GeoZone', back_populates='orders')
     users_: Mapped[Optional['Users']] = relationship('Users', foreign_keys=[validated_by], back_populates='orders_validated_by')
     order_lines: Mapped[list['OrderLines']] = relationship('OrderLines', back_populates='order')
+    group_id: Mapped[Optional[int]] = mapped_column(Integer)
+    group: Mapped[Optional['Groups']] = relationship('Groups', back_populates='orders')
+    
     def __repr__(self):
         return f"Order({self.order_number}, {self.customer}, {self.status}, {self.geo_zone_id}, {self.eta})"
 
@@ -218,3 +222,22 @@ class PalletLines(Base):
 
     order_line: Mapped['OrderLines'] = relationship('OrderLines', back_populates='pallet_lines')
     pallet: Mapped['Pallets'] = relationship('Pallets', back_populates='pallet_lines')
+
+
+class Groups(Base):
+    __tablename__ = 'groups'
+    __table_args__ = (
+        CheckConstraint("status::text = ANY (ARRAY['open'::character varying, 'packed'::character varying, 'shipped'::character varying]::text[])", name='groups_status_check'),
+        ForeignKeyConstraint(['geo_zone_id'], ['logistics.geo_zone.id_geo_zone'], name='fk_groups_geo_zone'),
+        PrimaryKeyConstraint('id_group', name='pk_groups'),
+        {'schema': 'logistics'}
+    )
+
+    id_group: Mapped[int] = mapped_column(Integer, primary_key=True)
+    geo_zone_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    eta_ref: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
+
+    geo_zone: Mapped['GeoZone'] = relationship('GeoZone', back_populates='groups')
+    orders: Mapped[list['Orders']] = relationship('Orders', back_populates='group')
