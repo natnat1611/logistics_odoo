@@ -110,7 +110,7 @@ class Orders(Base):
     users_: Mapped[Optional['Users']] = relationship('Users', foreign_keys=[validated_by], back_populates='orders_validated_by')
     order_lines: Mapped[list['OrderLines']] = relationship('OrderLines', back_populates='order')
     def __repr__(self):
-        return f"Order({self.order_number}, {self.customer}, {self.status}, {self.postcode})"
+        return f"Order({self.order_number}, {self.customer}, {self.status}, {self.geo_zone_id}, {self.eta})"
 
 class Pallets(Base):
     __tablename__ = 'pallets'
