@@ -1,24 +1,41 @@
-CONSTANTES
-    PALETTE_STD_LENGTH = 1.2
-    PALETTE_STD_WIDTH  = 0.8
-    PALETTE_MAX_HEIGHT = 2.0
-    PALETTE_MAX_WEIGHT = 1500.0
+from db import Session
+from models import GeoZone, Orders, OrderLines,Pallets,PalletLines,Shipments,ShipmentPallet, Groups
 
-def get_order_lines(session, group)
-    → pour chaque order du groupe
-    → récupère toutes les order_lines avec les produits associés
-    → retourne une liste de order_lines
+#CONST
+PALLET_STD_LENGTH = 1.2
+PALLET_STD_WIDTH  = 0.8
+PALLET_MAX_HEIGHT = 2.0
+PALLET_MAX_WEIGHT = 1500.0
 
-def create_palette(order_line)
-    → crée une nouvelle palette
-    → dimensions : max(standard, dimensions du produit)
-    → retourne un dict palette vide
+def get_order_lines(session, group_id):
+    return session.query(OrderLines)\
+        .join(Orders, OrderLines.order_id == Orders.order_number)\
+        .filter(Orders.group_id == group_id)\
+        .all()
 
-def can_fit(palette, order_line)
-    → vérifie si order_line rentre dans la palette
-    → check poids : palette['weight'] + order_line.weight_total <= 1500
-    → check hauteur : palette['height'] + product.height_per_unit <= 2.0
-    → retourne True/False
+
+
+def create_pallet(session, order_line, geo_zone_id):
+    product = order_line.product
+    
+    is_oversized = (product.length_per_unit > PALLET_STD_LENGTH or 
+                    product.width_per_unit > PALLET_STD_WIDTH)
+    
+    new_pallet = Pallets(
+        geo_zone_id   = geo_zone_id,
+        pallet_length = max(PALLET_STD_LENGTH, product.length_per_unit),
+        pallet_width  = max(PALLET_STD_WIDTH, product.width_per_unit),
+        pallet_height = product.height_per_unit * order_line.qty,
+        total_weight  = order_line.weight_total,
+        status        = 'closed' if is_oversized else 'open'
+    )
+    session.add(new_pallet)
+    session.flush()
+    return new_pallet
+
+def can_fit(pallet, order_line):
+    return pallet.total_weight + order_line.weight_total <= PALLET_MAX_WEIGHT and pallet.pallet_height + order_line.product.height_per_unit * order_line.qty <= PALLET_MAX_HEIGHT:
+
 
 def pack_group(session, group)
     → appelle get_order_lines()
