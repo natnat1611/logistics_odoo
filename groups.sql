@@ -10,3 +10,5 @@ CREATE TABLE logistics.groups (
 
 ALTER TABLE logistics.orders ADD COLUMN group_id INTEGER;
 ALTER TABLE logistics.orders ADD CONSTRAINT fk_orders_group FOREIGN KEY (group_id) REFERENCES logistics.groups(id_group);
+ALTER TABLE logistics.pallets ADD COLUMN group_id INTEGER;
+ALTER TABLE logistics.pallets ADD CONSTRAINT fk_pallets_group FOREIGN KEY (group_id) REFERENCES logistics.groups(id_group);
