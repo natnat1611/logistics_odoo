@@ -1,5 +1,5 @@
 from db import Session
-from models import GeoZone, Orders, OrderLines,Pallets,PalletLines,Shipments,ShipmentPallet, Groups
+from models import Orders, OrderLines,Pallets,PalletLines, Groups
 
 #CONST
 PALLET_STD_LENGTH = 1.2
