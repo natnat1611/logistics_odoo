@@ -34,18 +34,38 @@ def create_pallet(session, order_line, geo_zone_id):
     return new_pallet
 
 def can_fit(pallet, order_line):
-    return pallet.total_weight + order_line.weight_total <= PALLET_MAX_WEIGHT and pallet.pallet_height + order_line.product.height_per_unit * order_line.qty <= PALLET_MAX_HEIGHT:
+    return pallet.total_weight + order_line.weight_total <= PALLET_MAX_WEIGHT and pallet.pallet_height + order_line.product.height_per_unit * order_line.qty <= PALLET_MAX_HEIGHT
 
 
-def pack_group(session, group)
-    → appelle get_order_lines()
-    → pour chaque order_line :
-        → chercher une palette ouverte où ça rentre (can_fit)
-        → si trouvée → ajouter la ligne
-        → si pas trouvée → créer nouvelle palette
-    → retourne liste de palettes
+def pack_group(session, group_id):
+    group = session.query(Groups).filter(Groups.id_group == group_id).first()
+    lines = get_order_lines(session, group_id)
+    open_pallets = []
+    
+    for line in lines:
+        for pallet in open_pallets:
+            if can_fit(pallet, line):
+                new_line = PalletLines(pallet_id = pallet.id_pallet, order_line_id = line.id_order_lines )
+                session.add(new_line)
+                pallet.total_weight += line.weight_total
+                pallet.pallet_height += line.product.height_per_unit * line.qty
+                break
+        else:
+            new_pallet = create_pallet(session, line, group.geo_zone_id)
+            open_pallets.append(new_pallet)
+            new_line = PalletLines(pallet_id = new_pallet.id_pallet, order_line_id = line.id_order_lines)
+            session.add(new_line)
+    session.commit()
 
-def run_packer(session, groups)
-    → pour chaque groupe
-    → appelle pack_group()
-    → retourne toutes les palettes formées
+
+
+def run_packer(session):
+    groups = session.query(Groups).filter(Groups.status == 'open').all()
+    for group in groups:
+        pack_group(session, group.id_group)
+
+
+
+if __name__ == '__main__':
+    run_packer(Session)
+    print('done')
