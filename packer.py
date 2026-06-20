@@ -63,6 +63,8 @@ def run_packer(session):
     groups = session.query(Groups).filter(Groups.status == 'open').all()
     for group in groups:
         pack_group(session, group.id_group)
+        group.status = 'packed'  
+    session.commit()
 
 
 
