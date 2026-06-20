@@ -1,6 +1,6 @@
 from db import Session
-from models import GeoZone, Orders, OrderLines,Pallets,PalletLines,Shipments,ShipmentPallet, Groups
-from datetime import datetime
+from models import Orders, Groups
+
 
 
 def get_pending_orders(session):
