@@ -44,7 +44,8 @@ def choose_vehicle( vehicles, total_weight, total_length,total_width,n_pallets):
 
 def create_shipment(session, group_id, vehicle, departure_date, created_by):
     pallets = session.query(Pallets).filter(Pallets.group_id == group_id).all()
-    
+    if not pallets:
+        return None
     new_shipment = Shipments(
         vehicle_id     = vehicle.id_vehicle,
         geo_zone_id = pallets[0].geo_zone_id,
