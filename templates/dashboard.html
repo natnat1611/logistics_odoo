@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logistics — Planificateur d'expédition</title>
+<style>
+  :root{
+    --ink:#14110d;
+    --paper:#f3efe7;
+    --card:#fbf9f4;
+    --line:#d9d2c4;
+    --rust:#b4451f;
+    --rust-dark:#8f3414;
+    --moss:#3f6b4a;
+    --steel:#2f5266;
+    --amber:#c98a14;
+    --muted:#736b5e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 80px;}
+
+  header.top{
+    display:flex;align-items:baseline;justify-content:space-between;
+    border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:8px;
+    flex-wrap:wrap;gap:8px;
+  }
+  header.top h1{
+    font-size:30px;margin:0;letter-spacing:-.01em;font-weight:600;
+  }
+  header.top .sub{
+    font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;
+  }
+
+  .flash{
+    margin:16px 0;padding:10px 14px;border-radius:4px;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;
+  }
+  .flash.ok{background:#e7efe6;border:1px solid var(--moss);color:#274a30;}
+  .flash.err{background:#f4e3dc;border:1px solid var(--rust);color:var(--rust-dark);}
+
+  /* compteurs */
+  .stats{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:24px 0 8px;
+  }
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;
+    padding:14px 16px;
+  }
+  .stat .n{font-size:30px;font-weight:600;line-height:1;}
+  .stat .l{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:6px;
+  }
+
+  /* barre d'actions = le moteur en 3 temps */
+  .engine{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:26px 0 36px;
+  }
+  .step{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;
+    padding:18px;display:flex;flex-direction:column;gap:10px;
+    position:relative;
+  }
+  .step .num{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+    color:var(--muted);letter-spacing:.15em;
+  }
+  .step h3{margin:0;font-size:18px;font-weight:600;}
+  .step p{margin:0;font-size:13.5px;color:var(--muted);min-height:38px;}
+  .step form{margin:0;display:flex;gap:8px;align-items:center;}
+
+  button.go{
+    appearance:none;border:none;cursor:pointer;
+    background:var(--rust);color:#fff;border-radius:4px;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;
+    padding:9px 16px;letter-spacing:.04em;transition:background .15s;
+  }
+  button.go:hover{background:var(--rust-dark);}
+  button.go:focus-visible{outline:3px solid var(--amber);outline-offset:2px;}
+  select.win{
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:13px;
+    padding:8px 6px;border:1px solid var(--line);border-radius:4px;background:#fff;
+  }
+
+  section{margin:34px 0;}
+  section h2{
+    font-size:13px;font-family:"IBM Plex Mono",ui-monospace,monospace;
+    text-transform:uppercase;letter-spacing:.14em;color:var(--ink);
+    border-bottom:1px solid var(--line);padding-bottom:8px;margin:0 0 14px;
+  }
+  section h2 span{color:var(--muted);}
+
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--card);}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;}
+  th,td{padding:9px 12px;text-align:left;white-space:nowrap;}
+  thead th{
+    background:#efeadd;border-bottom:1px solid var(--line);
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+    text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;
+  }
+  tbody tr{border-bottom:1px solid #e8e2d5;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:#f6f1e6;}
+
+  .pill{
+    display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;letter-spacing:.02em;
+    border:1px solid currentColor;
+  }
+  .s-draft{color:#8a8275;}
+  .s-validated{color:var(--steel);}
+  .s-in_preparation,.s-loading{color:var(--amber);}
+  .s-ready,.s-open{color:var(--moss);}
+  .s-grouped,.s-packed,.s-planned{color:var(--steel);}
+  .s-shipped,.s-loaded,.s-closed,.s-departed{color:var(--rust-dark);}
+
+  a.lnk{color:var(--rust-dark);text-decoration:none;border-bottom:1px solid var(--line);}
+  a.lnk:hover{border-color:var(--rust-dark);}
+
+  .empty{padding:18px;color:var(--muted);font-style:italic;font-size:13.5px;}
+
+  @media (max-width:880px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .engine{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Planificateur d'expédition</h1>
+    <div class="sub">logistics_odoo · moteur de groupage</div>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}
+      <div class="flash {{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- compteurs -->
+  <div class="stats">
+    <div class="stat"><div class="n">{{ counts.orders_pending }}</div><div class="l">Commandes à traiter</div></div>
+    <div class="stat"><div class="n">{{ counts.groups_open }}</div><div class="l">Groupes ouverts</div></div>
+    <div class="stat"><div class="n">{{ counts.groups_packed }}</div><div class="l">Groupes palettisés</div></div>
+    <div class="stat"><div class="n">{{ counts.shipments }}</div><div class="l">Expéditions</div></div>
+    <div class="stat"><div class="n">{{ counts.vehicles_free }}</div><div class="l">Camions libres</div></div>
+  </div>
+
+  <!-- le moteur en 3 temps -->
+  <div class="engine">
+    <div class="step">
+      <div class="num">ÉTAPE 01</div>
+      <h3>Grouper</h3>
+      <p>Regroupe les commandes validées et prêtes par zone et fenêtre d'arrivée.</p>
+      <form method="post" action="{{ url_for('action_grouping') }}">
+        <select class="win" name="window_hours">
+          <option value="24">24 h</option>
+          <option value="48" selected>48 h</option>
+          <option value="72">72 h</option>
+          <option value="96">96 h</option>
+        </select>
+        <button class="go" type="submit">Lancer le groupage</button>
+      </form>
+    </div>
+
+    <div class="step">
+      <div class="num">ÉTAPE 02</div>
+      <h3>Palettiser</h3>
+      <p>Constitue les palettes de chaque groupe sous contrainte de poids et de hauteur.</p>
+      <form method="post" action="{{ url_for('action_packing') }}">
+        <button class="go" type="submit">Lancer la palettisation</button>
+      </form>
+    </div>
+
+    <div class="step">
+      <div class="num">ÉTAPE 03</div>
+      <h3>Affecter</h3>
+      <p>Choisit le plus petit camion disponible capable d'emporter chaque groupe.</p>
+      <form method="post" action="{{ url_for('action_dispatch') }}">
+        <button class="go" type="submit">Lancer l'affectation</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- COMMANDES -->
+  <section>
+    <h2>Commandes <span>· {{ orders|length }}</span></h2>
+    <div class="scroll">
+      {% if orders %}
+      <table>
+        <thead><tr>
+          <th>N°</th><th>Client</th><th>Ville</th><th>Zone</th>
+          <th>ETA</th><th>Statut</th><th>Groupe</th>
+        </tr></thead>
+        <tbody>
+        {% for o in orders %}
+          <tr>
+            <td>{{ o.order_number }}</td>
+            <td>{{ o.customer }}</td>
+            <td>{{ o.city }}</td>
+            <td>{{ zones.get(o.geo_zone_id, '—') }}</td>
+            <td>{{ o.eta.strftime('%d/%m %Hh') if o.eta else '—' }}</td>
+            <td><span class="pill s-{{ o.status }}">{{ order_status_fr.get(o.status, o.status) }}</span></td>
+            <td>{{ o.group_id if o.group_id else '—' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="empty">Aucune commande.</div>{% endif %}
+    </div>
+  </section>
+
+  <!-- GROUPES -->
+  <section>
+    <h2>Groupes <span>· {{ groups|length }}</span></h2>
+    <div class="scroll">
+      {% if groups %}
+      <table>
+        <thead><tr>
+          <th>N°</th><th>Zone</th><th>ETA référence</th><th>Statut</th>
+        </tr></thead>
+        <tbody>
+        {% for g in groups %}
+          <tr>
+            <td>{{ g.id_group }}</td>
+            <td>{{ zones.get(g.geo_zone_id, g.geo_zone_id) }}</td>
+            <td>{{ g.eta_ref.strftime('%d/%m/%Y %Hh') if g.eta_ref else '—' }}</td>
+            <td><span class="pill s-{{ g.status }}">{{ group_status_fr.get(g.status, g.status) }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="empty">Aucun groupe. Lancez le groupage.</div>{% endif %}
+    </div>
+  </section>
+
+  <!-- PALETTES -->
+  <section>
+    <h2>Palettes <span>· {{ pallets|length }}</span></h2>
+    <div class="scroll">
+      {% if pallets %}
+      <table>
+        <thead><tr>
+          <th>N°</th><th>Zone</th><th>Groupe</th><th>L (m)</th><th>l (m)</th>
+          <th>H (m)</th><th>Poids (kg)</th><th>Statut</th>
+        </tr></thead>
+        <tbody>
+        {% for p in pallets %}
+          <tr>
+            <td>{{ p.id_pallet }}</td>
+            <td>{{ zones.get(p.geo_zone_id, p.geo_zone_id) }}</td>
+            <td>{{ p.group_id if p.group_id else '—' }}</td>
+            <td>{{ '%.2f'|format(p.pallet_length) }}</td>
+            <td>{{ '%.2f'|format(p.pallet_width) }}</td>
+            <td>{{ '%.2f'|format(p.pallet_height) }}</td>
+            <td>{{ '%.1f'|format(p.total_weight) }}</td>
+            <td><span class="pill s-{{ p.status }}">{{ pallet_status_fr.get(p.status, p.status) }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="empty">Aucune palette. Lancez la palettisation.</div>{% endif %}
+    </div>
+  </section>
+
+  <!-- EXPEDITIONS -->
+  <section>
+    <h2>Expéditions <span>· {{ shipments|length }}</span></h2>
+    <div class="scroll">
+      {% if shipments %}
+      <table>
+        <thead><tr>
+          <th>N°</th><th>Zone</th><th>Départ</th><th>Poids (kg)</th>
+          <th>Remplissage</th><th>Statut</th><th></th>
+        </tr></thead>
+        <tbody>
+        {% for s in shipments %}
+          <tr>
+            <td>{{ s.id_shipment }}</td>
+            <td>{{ zones.get(s.geo_zone_id, s.geo_zone_id) }}</td>
+            <td>{{ s.departure_date.strftime('%d/%m/%Y') if s.departure_date else '—' }}</td>
+            <td>{{ '%.1f'|format(s.total_weight) if s.total_weight else '—' }}</td>
+            <td>{{ '%.0f'|format(s.fill_rate) ~ ' %' if s.fill_rate else '—' }}</td>
+            <td><span class="pill s-{{ s.status }}">{{ shipment_status_fr.get(s.status, s.status) }}</span></td>
+            <td><a class="lnk" href="{{ url_for('shipment_detail', shipment_id=s.id_shipment) }}">Bon de chargement →</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="empty">Aucune expédition. Lancez l'affectation.</div>{% endif %}
+    </div>
+  </section>
+
+  <!-- VEHICULES -->
+  <section>
+    <h2>Flotte <span>· {{ vehicles|length }}</span></h2>
+    <div class="scroll">
+      {% if vehicles %}
+      <table>
+        <thead><tr>
+          <th>N°</th><th>Plaque</th><th>P. max (kg)</th><th>L. max (m)</th>
+          <th>l. max (m)</th><th>H. max (m)</th><th>Disponible</th>
+        </tr></thead>
+        <tbody>
+        {% for v in vehicles %}
+          <tr>
+            <td>{{ v.id_vehicle }}</td>
+            <td>{{ v.plate }}</td>
+            <td>{{ '%.0f'|format(v.max_weight) }}</td>
+            <td>{{ '%.2f'|format(v.max_length) }}</td>
+            <td>{{ '%.2f'|format(v.max_width) }}</td>
+            <td>{{ '%.2f'|format(v.max_height) }}</td>
+            <td>{{ 'Oui' if v.is_available else 'Non' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="empty">Aucun véhicule.</div>{% endif %}
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
