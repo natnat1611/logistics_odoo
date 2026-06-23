@@ -5,7 +5,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request
 from db import Session
 from models import (
     Orders, OrderLines, Products, Pallets, PalletLines,
-    Shipments, ShipmentPallet, Groups, Vehicles, GeoZone,
+    Shipments, ShipmentPallet, Groups, Vehicles, GeoZone, Users,
 )
 from grouper import run_grouping
 from packer import run_packer
@@ -57,6 +57,7 @@ def dashboard():
     pallets = Session.query(Pallets).order_by(Pallets.id_pallet).all()
     shipments = Session.query(Shipments).order_by(Shipments.id_shipment).all()
     vehicles = Session.query(Vehicles).order_by(Vehicles.id_vehicle).all()
+    users = Session.query(Users).order_by(Users.name).all()
 
     return render_template(
         "dashboard.html",
@@ -67,6 +68,7 @@ def dashboard():
         pallets=pallets,
         shipments=shipments,
         vehicles=vehicles,
+        users=users,
         order_status_fr=ORDER_STATUS_FR,
         group_status_fr=GROUP_STATUS_FR,
         pallet_status_fr=PALLET_STATUS_FR,
@@ -92,7 +94,8 @@ def action_packing():
 
 @app.route("/run/dispatch", methods=["POST"])
 def action_dispatch():
-    run_dispatcher(Session, created_by=1, departure_date=date.today())
+    user_id = int(request.form.get("user_id", 1))
+    run_dispatcher(Session, created_by=user_id, departure_date=date.today())
     flash("Affectation aux camions lancée.", "ok")
     return redirect(url_for("dashboard"))
 
@@ -119,13 +122,28 @@ def shipment_detail(shipment_id):
 
     total_weight = sum(p.total_weight for _, p in rows)
 
+    # contenu détaillé de chaque palette
+    pallet_data = []
+    for sp, p in rows:
+        lines = (
+            Session.query(PalletLines, OrderLines, Products)
+            .join(OrderLines, PalletLines.order_line_id == OrderLines.id_order_lines)
+            .join(Products, OrderLines.product_id == Products.sku)
+            .filter(PalletLines.pallet_id == p.id_pallet)
+            .all()
+        )
+        pallet_data.append((sp, p, lines))
+
+    creator = Session.query(Users).filter(Users.id_user == shipment.created_by).first()
+
     return render_template(
         "shipment.html",
         shipment=shipment,
         vehicle=vehicle,
         zone=zone,
-        rows=rows,
+        pallet_data=pallet_data,
         total_weight=total_weight,
+        creator=creator,
         shipment_status_fr=SHIPMENT_STATUS_FR,
         pallet_status_fr=PALLET_STATUS_FR,
     )
