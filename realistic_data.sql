@@ -2,9 +2,6 @@
 -- DATASET RÉALISTE — logistics_odoo
 -- ============================================================
 
--- USERS
-INSERT INTO logistics.users (name, user_role) VALUES
-('Sophie Marchand', 'dispatcher'), ('Kevin Dubois', 'dispatcher'), ('Inès Fontaine', 'dispatcher'), ('Marc Lecomte', 'dispatcher'), ('Arnaud Lejeune', 'preparer'), ('Fatima Ouali', 'preparer'), ('Luc Renard', 'preparer'), ('Céline Bastin', 'preparer'), ('Julien Pirard', 'preparer'), ('Nora Claes', 'preparer'), ('Thomas Bastin', 'truck_admin'), ('Marie Collin', 'truck_admin'), ('Romain Delobbe', 'truck_admin');
 
 -- GEO ZONES
 INSERT INTO logistics.geo_zone (post_code, zone_name) VALUES
