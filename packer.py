@@ -15,7 +15,7 @@ def get_order_lines(session, group_id):
 
 
 
-def create_pallet(session, order_line, geo_zone_id):
+def create_pallet(session, order_line, geo_zone_id,group_id):
     product = order_line.product
     
     is_oversized = (product.length_per_unit > PALLET_STD_LENGTH or 
@@ -23,6 +23,7 @@ def create_pallet(session, order_line, geo_zone_id):
     
     new_pallet = Pallets(
         geo_zone_id   = geo_zone_id,
+        group_id = group_id,
         pallet_length = max(PALLET_STD_LENGTH, product.length_per_unit),
         pallet_width  = max(PALLET_STD_WIDTH, product.width_per_unit),
         pallet_height = product.height_per_unit * order_line.qty,
@@ -51,7 +52,7 @@ def pack_group(session, group_id):
                 pallet.pallet_height += line.product.height_per_unit * line.qty
                 break
         else:
-            new_pallet = create_pallet(session, line, group.geo_zone_id)
+            new_pallet = create_pallet(session, line, group.geo_zone_id, group_id)
             open_pallets.append(new_pallet)
             new_line = PalletLines(pallet_id = new_pallet.id_pallet, order_line_id = line.id_order_lines)
             session.add(new_line)
