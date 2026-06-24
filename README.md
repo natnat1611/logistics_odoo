@@ -1,6 +1,6 @@
 <div align="center">
 
-# logistics 4 odoo
+# Logistics 4 odoo
 
 **A batch-processing engine for shipping logistics.**
 
