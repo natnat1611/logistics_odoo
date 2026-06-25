@@ -1,6 +1,6 @@
 <div align="center">
 
-# Logistics 4 odoo
+# logistics_odoo
 
 **A batch-processing engine for shipping logistics.**
 
@@ -9,6 +9,11 @@ From customer orders to printable loading sheets — group orders by zone, build
 <sub>Python · Flask · SQLAlchemy · PostgreSQL</sub>
 
 </div>
+
+---
+
+> [!NOTE]
+> **`app.py`, the Flask interface (`templates/`) and README.md were generated with AI assistance**, due to limited familiarity with Flask and time constraints. The core logic — the data model and the three engine stages (`grouper.py`, `packer.py`, `dispatcher.py`) — is hand-written. The web layer is a thin wrapper to run and visualize that logic.
 
 ---
 
